@@ -1,0 +1,354 @@
+import React, { useState } from 'react';
+import axios from 'axios';
+
+const RecipeForm = ({ onSubmit, recipe }) => {
+  const [title, setTitle] = useState(recipe?.title || '');
+  const [description, setDescription] = useState(recipe?.description || '');
+  const [image, setImage] = useState(recipe?.image || '');
+  const [cuisine, setCuisine] = useState(recipe?.cuisine || 'Indian');
+  const [type, setType] = useState(recipe?.type || 'Veg');
+  const [mealType, setMealType] = useState(recipe?.mealType || 'Breakfast');
+  const [steps, setSteps] = useState(recipe?.steps || ['']);
+  const [ingredients, setIngredients] = useState(recipe?.ingredients || []);
+  const [query, setQuery] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleStepChange = (index, value) => {
+    const updatedSteps = [...steps];
+    updatedSteps[index] = value;
+    setSteps(updatedSteps);
+  };
+
+  const addStep = () => {
+    setSteps([...steps, '']);
+  };
+
+  // Remove a step
+  const removeStep = (index) => {
+    const updatedSteps = steps.filter((_, stepIndex) => stepIndex !== index);
+    setSteps(updatedSteps);
+  };
+
+  const handleAddIngredient = () => {
+    setIngredients([...ingredients, { heading: '', items: [''] }]);
+  };
+
+  const handleIngredientChange = (index, field, value) => {
+    const updatedIngredients = [...ingredients];
+    if (field === 'heading') {
+      updatedIngredients[index].heading = value;
+    } else {
+      updatedIngredients[index].items = value.split(',').map((item) => item.trim());
+    }
+    setIngredients(updatedIngredients);
+  };
+
+  // Remove an ingredient group
+  const removeIngredient = (index) => {
+    const updatedIngredients = ingredients.filter((_, ingredientIndex) => ingredientIndex !== index);
+    setIngredients(updatedIngredients);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const newRecipe = {
+      title,
+      description,
+      image,
+      cuisine,
+      type,
+      mealType,
+      steps,
+      ingredients,
+    };
+    onSubmit(newRecipe);
+  };
+
+  const fetchRecipe = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await axios.get(`https://api.api-ninjas.com/v1/recipe?query=${query}`, {
+        headers: { 'X-Api-Key': 'fEG5Qr8UHLUCO27KieIkTQ==xC1w4hbRmwWrmiJ6' },
+      });
+
+      if (response.data.length > 0) {
+        const fetchedRecipe = response.data[0];
+        setTitle(fetchedRecipe.title);
+        setDescription(fetchedRecipe.instructions);
+        setIngredients([{ heading: 'Main Ingredients', items: fetchedRecipe.ingredients.split('|') }]);
+        setSteps(fetchedRecipe.instructions.split('. '));
+      } else {
+        setError('No recipe found for the given query.');
+      }
+    } catch (error) {
+      setError('An error occurred while fetching the recipe. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} style={{ maxWidth: '768px', margin: '0 auto', marginTop: '64px' }}>
+      {/* Recipe Query Input */}
+      <div style={{ marginBottom: '24px' }}>
+        <label style={{ display: 'block', color: '#333', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>
+          Search Recipe
+        </label>
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Enter recipe name"
+          style={{
+            boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+            border: '1px solid #ccc',
+            borderRadius: '4px',
+            width: '100%',
+            padding: '8px',
+            fontSize: '14px',
+            color: '#333',
+          }}
+        />
+        <button
+          type="button"
+          onClick={fetchRecipe}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#4CAF50',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            marginTop: '8px',
+          }}
+        >
+          Generate Recipe
+        </button>
+        {loading && <p>Loading...</p>}
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+      </div>
+
+      {/* Title Field */}
+      <div style={{ marginBottom: '24px' }}>
+        <label style={{ display: 'block', color: '#333', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Title</label>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          style={{ boxShadow: '0 0 10px rgba(0,0,0,0.1)', border: '1px solid #ccc', borderRadius: '4px', width: '100%', padding: '8px', fontSize: '14px', color: '#333' }}
+          required
+        />
+      </div>
+
+      {/* Description Field */}
+      <div style={{ marginBottom: '24px' }}>
+        <label style={{ display: 'block', color: '#333', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Description</label>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          style={{ boxShadow: '0 0 10px rgba(0,0,0,0.1)', border: '1px solid #ccc', borderRadius: '4px', width: '100%', padding: '8px', fontSize: '14px', color: '#333' }}
+        ></textarea>
+      </div>
+
+      {/* Image URL Field */}
+      <div style={{ marginBottom: '24px' }}>
+        <label style={{ display: 'block', color: '#333', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Image URL</label>
+        <input
+          type="text"
+          value={image}
+          onChange={(e) => setImage(e.target.value)}
+          style={{ boxShadow: '0 0 10px rgba(0,0,0,0.1)', border: '1px solid #ccc', borderRadius: '4px', width: '100%', padding: '8px', fontSize: '14px', color: '#333' }}
+        />
+      </div>
+
+      {/* Cuisine Selector */}
+      <div style={{ marginBottom: '24px' }}>
+        <label style={{ display: 'block', color: '#333', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Cuisine</label>
+        <select
+          value={cuisine}
+          onChange={(e) => setCuisine(e.target.value)}
+          style={{ boxShadow: '0 0 10px rgba(0,0,0,0.1)', border: '1px solid #ccc', borderRadius: '4px', width: '100%', padding: '8px', fontSize: '14px', color: '#333' }}
+        >
+          <option value="Indian">Indian</option>
+          <option value="Chinese">Chinese</option>
+          <option value="Italian">Italian</option>
+          <option value="French">French</option>
+          <option value="Mexican">Mexican</option>
+        </select>
+      </div>
+
+      {/* Type Selector */}
+      <div style={{ marginBottom: '24px' }}>
+        <label style={{ display: 'block', color: '#333', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Type</label>
+        <select
+          value={type}
+          onChange={(e) => setType(e.target.value)}
+          style={{ boxShadow: '0 0 10px rgba(0,0,0,0.1)', border: '1px solid #ccc', borderRadius: '4px', width: '100%', padding: '8px', fontSize: '14px', color: '#333' }}
+        >
+          <option value="Veg">Veg</option>
+          <option value="Non-Veg">Non-Veg</option>
+          <option value="Vegan">Vegan</option>
+        </select>
+      </div>
+
+      {/* Meal Type Selector */}
+      <div style={{ marginBottom: '24px' }}>
+        <label style={{ display: 'block', color: '#333', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Meal Type</label>
+        <select
+          value={mealType}
+          onChange={(e) => setMealType(e.target.value)}
+          style={{ boxShadow: '0 0 10px rgba(0,0,0,0.1)', border: '1px solid #ccc', borderRadius: '4px', width: '100%', padding: '8px', fontSize: '14px', color: '#333' }}
+        >
+          <option value="Breakfast">Breakfast</option>
+          <option value="Lunch">Lunch</option>
+          <option value="Dinner">Dinner</option>
+          <option value="Dessert">Dessert</option>
+          <option value="Snacks">Snacks</option>
+        </select>
+      </div>
+
+      <div style={{ marginBottom: '24px' }}>
+        <label style={{ display: 'block', color: '#333', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>
+          Steps :
+        </label>
+        {steps.map((step, index) => (
+          <div key={index} style={{ marginBottom: '10px', display: 'flex', alignItems: 'center' }}>
+            <input
+              type="text"
+              value={step}
+              onChange={(e) => handleStepChange(index, e.target.value)}
+              placeholder={`Step ${index + 1}`}
+              style={{
+                boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                width: '100%',
+                padding: '8px',
+                fontSize: '14px',
+                color: '#333',
+                marginRight: '8px',
+              }}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => removeStep(index)}
+              style={{
+                backgroundColor: 'red',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                padding: '6px 12px',
+              }}
+            >
+              X
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={addStep}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#4CAF50',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+          }}
+        >
+          Add Step
+        </button>
+      </div>
+
+      {/* Ingredients Section */}
+      <div style={{ marginBottom: '24px' }}>
+        <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#333', marginBottom: '8px' }}>Ingredients:</h3>
+        {ingredients.map((ingredient, index) => (
+          <div key={index} style={{ marginBottom: '10px' }}>
+            <input
+              type="text"
+              placeholder="Heading"
+              value={ingredient.heading}
+              onChange={(e) => handleIngredientChange(index, 'heading', e.target.value)}
+              style={{
+                boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                width: '100%',
+                padding: '8px',
+                fontSize: '14px',
+                color: '#333',
+                marginBottom: '4px',
+              }}
+            />
+            <textarea
+              placeholder="Items (comma-separated)"
+              value={ingredient.items.join(', ')}
+              onChange={(e) => handleIngredientChange(index, 'items', e.target.value)}
+              style={{
+                boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                width: '100%',
+                padding: '8px',
+                fontSize: '14px',
+                color: '#333',
+                marginBottom: '4px',
+              }}
+            ></textarea>
+            <button
+              type="button"
+              onClick={() => removeIngredient(index)}
+              style={{
+                backgroundColor: 'red',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                padding: '6px 12px',
+              }}
+            >
+              X
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={handleAddIngredient}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#4CAF50',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+          }}
+        >
+          Add Ingredient Group
+        </button>
+      </div>
+
+      {/* Submit Button */}
+      <button
+        type="submit"
+        style={{
+          padding: '10px 20px',
+          backgroundColor: '#008CBA',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+        }}
+      >
+        Submit Recipe
+      </button>
+    </form>
+  );
+};
+
+export default RecipeForm;
