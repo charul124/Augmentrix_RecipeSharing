@@ -1,27 +1,35 @@
 const express = require('express');
-const mongoose = require('mongoose'); // Add this line
+const mongoose = require('mongoose');
 const router = express.Router();
 const Recipe = require('../models/Recipe');
-
+const authMiddleware = require('../middleware/authMiddleware');
+const recipeRouter = express.Router();
 
 // Create a new recipe
-router.post('/', async (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
+  console.log('Creating a new recipe...');
   try {
     const { title, description, image, steps, cuisine, type, mealType, ingredients } = req.body;
+    console.log('Req body:', req.body);
 
-    // Basic validation for required fields
+    // Validate required fields
     if (!title || !Array.isArray(steps) || steps.length === 0) {
+      console.log('Error: Title and steps are required, and steps should be an array.');
       return res.status(400).json({ message: 'Title and steps are required, and steps should be an array.' });
     }
-
-    // Additional validation for required fields
     if (!cuisine || !type || !mealType) {
+      console.log('Error: Cuisine, type, and meal type are required.');
       return res.status(400).json({ message: 'Cuisine, type, and meal type are required.' });
     }
-
-    // Validate ingredients structure
     if (!Array.isArray(ingredients) || ingredients.some(ing => !ing.heading || !Array.isArray(ing.items))) {
+      console.log('Error: Ingredients must be structured with headings and items.');
       return res.status(400).json({ message: 'Ingredients must be structured with headings and items.' });
+    }
+
+    // Validate req.user
+    if (!req.user) {
+      console.log('Error: Unauthorized');
+      return res.status(401).json({ message: 'Unauthorized' });
     }
 
     const newRecipe = new Recipe({
@@ -32,10 +40,13 @@ router.post('/', async (req, res) => {
       cuisine,
       type,
       mealType,
-      ingredients // Save the structured ingredients
+      ingredients,
+      createdBy: req.user._id
     });
+    console.log('New recipe:', newRecipe);
 
     await newRecipe.save();
+    console.log('Recipe saved successfully!');
     res.status(201).json(newRecipe);
   } catch (error) {
     console.error('Error creating recipe:', error);
@@ -43,25 +54,17 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Get all recipes (with optional filters)
-router.get('/', async (req, res) => {
+// Get all recipes with optional filters
+router.get('/get', async (req, res) => {
+  console.log('Getting all recipes...');
   try {
     const filters = req.query;
-    const recipes = await Recipe.find(filters); // Filters are passed from query params
-    if (Object.keys(filters).length === 0) { // If no filters are provided, retrieve all recipes
-      recipes = await Recipe.find();
-    }
-    res.status(200).json(recipes);
-  } catch (error) {
-    console.error('Error fetching recipes:', error);
-    res.status(500).json({ message: 'Error fetching recipes', error });
-  }
-});
+    console.log('Filters:', filters);
+    const recipes = Object.keys(filters).length === 0
+      ? await Recipe.find()
+      : await Recipe.find(filters);
+    console.log('Recipes:', recipes);
 
-// Get all recipes (without filters)
-router.get('/get', async (req, res) => {
-  try {
-    const recipes = await Recipe.find(); // Retrieve all recipes
     res.status(200).json(recipes);
   } catch (error) {
     console.error('Error fetching recipes:', error);
@@ -71,12 +74,41 @@ router.get('/get', async (req, res) => {
 
 // Get a recipe by ID
 router.get('/:id', async (req, res) => {
+  console.log('Getting a recipe by ID...');
   const recipeId = req.params.id;
+  console.log('Recipe ID:', recipeId);
 
-  // Log the received ID for debugging
-  console.log('Received ID:', recipeId);
+  // Validate recipeId
+  if (!mongoose.Types.ObjectId.isValid(recipeId)) {
+    console.log('Error: Invalid recipe ID format');
+    return res.status(400).json({ message: 'Invalid recipe ID format' });
+  }
 
-  // Check if the ID is a valid ObjectId
+  // Additional validation for recipeId
+  if (!/^[0-9a-fA-F]{24}$/.test(recipeId)) {
+    console.log('Error: Invalid recipe ID format');
+    return res.status(400).json({ message: 'Invalid recipe ID format' });
+  }
+
+  try {
+    const recipe = await Recipe.findById(recipeId);
+    console.log('Recipe:', recipe);
+    if (!recipe) {
+      console.log('Error: Recipe not found');
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+    res.status(200).json(recipe);
+  } catch (error) {
+    console.error('Error fetching recipe:', error);
+    res.status(500).json({ message: 'Error fetching recipe', error });
+  }
+});
+
+// Update a recipe by ID
+router.put('/:id', authMiddleware, async (req, res) => {
+  const recipeId = req.params.id;
+  const { title, description, image, steps, cuisine, type, mealType, ingredients } = req.body;
+
   if (!mongoose.Types.ObjectId.isValid(recipeId)) {
     return res.status(400).json({ message: 'Invalid recipe ID format' });
   }
@@ -85,45 +117,24 @@ router.get('/:id', async (req, res) => {
     const recipe = await Recipe.findById(recipeId);
     if (!recipe) {
       return res.status(404).json({ message: 'Recipe not found' });
-    } 
-    res.status(200).json(recipe);
-  } catch (error) {
-    console.error('Error fetching recipe:', error);
-    res.status(500).json({ message: 'Error fetching recipe', error });
-  }
-});
-
-
-// Update a recipe by ID
-router.put('/:id', async (req, res) => {
-  const recipeId = req.params.id;
-
-  if (!recipeId || typeof recipeId !== 'string' || recipeId.trim() === '') {
-    return res.status(400).json({ message: 'Invalid recipe ID' });
-  }
-
-  const { title, description, image, steps, cuisine, type, mealType, ingredients } = req.body;
-
-  if (steps && !Array.isArray(steps)) {
-    return res.status(400).json({ message: 'Steps should be an array.' });
-  }
-
-  if (ingredients && (!Array.isArray(ingredients) || ingredients.some(ing => !ing.heading || !Array.isArray(ing.items)))) {
-    return res.status(400).json({ message: 'Ingredients must be structured with headings and items.' });
-  }
-
-  try {
-    const updatedRecipe = await Recipe.findByIdAndUpdate(
-      recipeId,
-      { title, description, image, steps, cuisine, type, mealType, ingredients },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedRecipe) {
-      return res.status(404).json({ message: 'Recipe not found' });
     }
 
-    res.status(200).json(updatedRecipe);
+    // Check if the user attempting to edit the recipe is the same user who created it
+    if (recipe.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(401).json({ message: 'You are not authorized to edit this recipe' });
+    }
+
+    recipe.title = title;
+    recipe.description = description;
+    recipe.image = image;
+    recipe.steps = steps;
+    recipe.cuisine = cuisine;
+    recipe.type = type;
+    recipe.mealType = mealType;
+    recipe.ingredients = ingredients;
+
+    await recipe.save();
+    res.status(200).json(recipe);
   } catch (error) {
     console.error('Error updating recipe:', error);
     res.status(500).json({ message: 'Error updating recipe', error });
@@ -131,15 +142,15 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete a recipe by ID
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authMiddleware, async (req, res) => {
   const recipeId = req.params.id;
 
-  if (!recipeId || typeof recipeId !== 'string' || recipeId.trim() === '') {
-    return res.status(400).json({ message: 'Invalid recipe ID' });
+  if (!mongoose.Types.ObjectId.isValid(recipeId)) {
+    return res.status(400).json({ message: 'Invalid recipe ID format' });
   }
 
   try {
-    const recipe = await Recipe.findByIdAndDelete(recipeId);
+    const recipe = await Recipe.findById(recipeId);
     if (!recipe) {
       return res.status(404).json({ message: 'Recipe not found' });
     }

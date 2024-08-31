@@ -33,12 +33,9 @@ const RecipeCard = ({ recipe }) => {
                 </p>
             </div>
             <div style={{ padding: '24px', paddingTop: '6px' }}>
-                <Link 
-                    to={`/recipe/${recipe._id}`} 
-                    style={{ color: '#03a9f4', textDecoration: 'none' }} 
-                >
-                    View Recipe
-                </Link>            
+            <Link to={`/recipe/${recipe._id}`} style={{ color: '#03a9f4', textDecoration: 'none' }}>
+                View Recipe
+            </Link>         
             </div>
         </div>
     );

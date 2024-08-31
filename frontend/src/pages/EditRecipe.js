@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import RecipeForm from '../components/RecipeForm';
 import { useParams, useNavigate } from 'react-router-dom';
+import useToken from '../pages/useToken';
 
 const EditRecipe = () => {
   const { id } = useParams();
@@ -9,49 +10,55 @@ const EditRecipe = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const { token, isValid } = useToken();
 
   useEffect(() => {
     const fetchRecipe = async () => {
       setLoading(true);
       try {
         const response = await axios.get(`http://localhost:5000/api/recipes/${id}`);
-        if (response.status === 200) {
-          setRecipe(response.data);
-        } else {
-          setError('Recipe not found');
-        }
+        setRecipe(response.data);
       } catch (error) {
-        console.error('There was an error fetching the recipe!', error);
         setError('There was an error fetching the recipe.');
       } finally {
         setLoading(false);
       }
     };
-
-    if (id) fetchRecipe();
+    fetchRecipe();
   }, [id]);
 
   const handleSubmit = async (updatedRecipe) => {
+    if (!isValid) {
+      setError('Token is not valid');
+      return;
+    }
+    console.log('handleSubmit called with updatedRecipe:', updatedRecipe);
     try {
-      setLoading(true);
-      console.log('Updating recipe with ID:', id);
-      const response = await axios.put(`http://localhost:5000/api/recipes/${id}`, updatedRecipe);
-      console.log('Recipe updated successfully:', response.data);
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+      console.log('Sending PUT request with headers:', headers);
+      const response = await axios.put(`http://localhost:5000/api/recipes/${id}`, updatedRecipe, { headers });
+      console.log('Response from server:', response);
       navigate(`/recipe/${id}`);
+
     } catch (error) {
-      console.error('There was an error updating the recipe!', error);
-      setError('There was an error updating the recipe.');
-    } finally {
-      setLoading(false);
+      if (error.response.status === 401) {
+        alert("Sorry, you cannot edit this recipe as you are not the author.");
+      } else {
+        console.error('Error updating recipe:', error);
+        alert('Error updating recipe. Please try again later.');
+      }
     }
   };
 
   if (loading) {
-    return <p>Loading...</p>;
+    return <div>Loading...</div>;
   }
 
   if (error) {
-    return <p style={{ color: 'red' }}>{error}</p>;
+    return <div>Error: {error}</div>;
   }
 
   return (

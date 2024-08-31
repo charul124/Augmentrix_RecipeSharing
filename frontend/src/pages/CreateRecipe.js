@@ -1,15 +1,18 @@
 import React from 'react';
 import axios from 'axios';
 import RecipeForm from '../components/RecipeForm';
+import { useNavigate } from 'react-router-dom';
 
 const CreateRecipe = () => {
+    const navigate = useNavigate();
+
     const handleSubmit = async (recipe) => {
         try {
             const response = await axios.post('http://localhost:5000/api/recipes/', recipe);
-            const newRecipeId = response.data._id;
-            window.location.href = `/recipe/${newRecipeId}`;
+            navigate(`/recipe/${response.data._id}`);
         } catch (error) {
             console.error('There was an error creating the recipe!', error);
+            alert('Failed to create the recipe. Please try again.');
         }
     };
 

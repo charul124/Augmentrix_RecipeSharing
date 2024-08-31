@@ -2,23 +2,21 @@ import React, { useState } from 'react';
 import axios from 'axios';
 
 const RecipeForm = ({ onSubmit, recipe }) => {
-  const [title, setTitle] = useState(recipe?.title || '');
-  const [description, setDescription] = useState(recipe?.description || '');
-  const [image, setImage] = useState(recipe?.image || '');
-  const [cuisine, setCuisine] = useState(recipe?.cuisine || 'Indian');
-  const [type, setType] = useState(recipe?.type || 'Veg');
-  const [mealType, setMealType] = useState(recipe?.mealType || 'Breakfast');
-  const [steps, setSteps] = useState(recipe?.steps || ['']);
-  const [ingredients, setIngredients] = useState(recipe?.ingredients || []);
-  const [query, setQuery] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+    const [title, setTitle] = useState(recipe?.title || '');
+    const [description, setDescription] = useState(recipe?.description || '');
+    const [image, setImage] = useState(recipe?.image || '');
+    const [cuisine, setCuisine] = useState(recipe?.cuisine || 'Indian');
+    const [type, setType] = useState(recipe?.type || 'Veg');
+    const [mealType, setMealType] = useState(recipe?.mealType || 'Breakfast');
+    const [steps, setSteps] = useState(recipe?.steps || ['']);
+    const [ingredients, setIngredients] = useState(recipe?.ingredients || []);
+    const [query, setQuery] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
   const handleStepChange = (index, value) => {
-    const updatedSteps = [...steps];
-    updatedSteps[index] = value;
-    setSteps(updatedSteps);
-  };
+    setSteps(steps => steps.map((step, i) => (i === index ? value : step)));
+};
 
   const addStep = () => {
     setSteps([...steps, '']);
@@ -35,14 +33,14 @@ const RecipeForm = ({ onSubmit, recipe }) => {
   };
 
   const handleIngredientChange = (index, field, value) => {
-    const updatedIngredients = [...ingredients];
-    if (field === 'heading') {
-      updatedIngredients[index].heading = value;
-    } else {
-      updatedIngredients[index].items = value.split(',').map((item) => item.trim());
-    }
-    setIngredients(updatedIngredients);
-  };
+    setIngredients(ingredients =>
+        ingredients.map((ingredient, i) =>
+            i === index
+                ? { ...ingredient, [field]: field === 'items' ? value.split(',').map(item => item.trim()) : value }
+                : ingredient
+        )
+    );
+};
 
   // Remove an ingredient group
   const removeIngredient = (index) => {
@@ -95,7 +93,7 @@ const RecipeForm = ({ onSubmit, recipe }) => {
       {/* Recipe Query Input */}
       <div style={{ marginBottom: '24px' }}>
         <label style={{ display: 'block', color: '#333', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>
-          Search Recipe
+          Generate a recipe
         </label>
         <input
           type="text"
@@ -123,6 +121,7 @@ const RecipeForm = ({ onSubmit, recipe }) => {
             borderRadius: '4px',
             cursor: 'pointer',
             marginTop: '8px',
+            width :  '100%',
           }}
         >
           Generate Recipe
@@ -131,9 +130,15 @@ const RecipeForm = ({ onSubmit, recipe }) => {
         {error && <p style={{ color: 'red' }}>{error}</p>}
       </div>
 
+      <div class="relative flex py-5 items-center">
+    <div class="flex-grow border-t border-gray-400"></div>
+    <span class="flex-shrink mx-4 text-gray-400">or Add recipe manually</span>
+    <div class="flex-grow border-t border-gray-400"></div>
+    </div>
+
       {/* Title Field */}
       <div style={{ marginBottom: '24px' }}>
-        <label style={{ display: 'block', color: '#333', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Title</label>
+        <label style={{ display: 'block', color: '#333', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Name of the Recipe</label>
         <input
           type="text"
           value={title}
@@ -145,7 +150,7 @@ const RecipeForm = ({ onSubmit, recipe }) => {
 
       {/* Description Field */}
       <div style={{ marginBottom: '24px' }}>
-        <label style={{ display: 'block', color: '#333', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Description</label>
+        <label style={{ display: 'block', color: '#333', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Something about the Recipe !</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -155,7 +160,7 @@ const RecipeForm = ({ onSubmit, recipe }) => {
 
       {/* Image URL Field */}
       <div style={{ marginBottom: '24px' }}>
-        <label style={{ display: 'block', color: '#333', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Image URL</label>
+        <label style={{ display: 'block', color: '#333', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Recipe Image</label>
         <input
           type="text"
           value={image}
@@ -163,9 +168,10 @@ const RecipeForm = ({ onSubmit, recipe }) => {
           style={{ boxShadow: '0 0 10px rgba(0,0,0,0.1)', border: '1px solid #ccc', borderRadius: '4px', width: '100%', padding: '8px', fontSize: '14px', color: '#333' }}
         />
       </div>
-
-      {/* Cuisine Selector */}
-      <div style={{ marginBottom: '24px' }}>
+        
+      <div className='flex mb-7 w-full gap-5'>
+          {/* Cuisine Selector */}
+      <div className='w-1/2'>
         <label style={{ display: 'block', color: '#333', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Cuisine</label>
         <select
           value={cuisine}
@@ -181,7 +187,7 @@ const RecipeForm = ({ onSubmit, recipe }) => {
       </div>
 
       {/* Type Selector */}
-      <div style={{ marginBottom: '24px' }}>
+      <div className='w-1/2'>
         <label style={{ display: 'block', color: '#333', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Type</label>
         <select
           value={type}
@@ -193,6 +199,8 @@ const RecipeForm = ({ onSubmit, recipe }) => {
           <option value="Vegan">Vegan</option>
         </select>
       </div>
+      </div>
+      
 
       {/* Meal Type Selector */}
       <div style={{ marginBottom: '24px' }}>
@@ -259,9 +267,10 @@ const RecipeForm = ({ onSubmit, recipe }) => {
             border: 'none',
             borderRadius: '4px',
             cursor: 'pointer',
+            width : '100%',
           }}
         >
-          Add Step
+          Add Custom Steps to make the Recipe
         </button>
       </div>
 
@@ -327,6 +336,7 @@ const RecipeForm = ({ onSubmit, recipe }) => {
             border: 'none',
             borderRadius: '4px',
             cursor: 'pointer',
+            width : '100%',
           }}
         >
           Add Ingredient Group
@@ -343,9 +353,10 @@ const RecipeForm = ({ onSubmit, recipe }) => {
           border: 'none',
           borderRadius: '4px',
           cursor: 'pointer',
+          width : '100%',
         }}
       >
-        Submit Recipe
+        Submit Your Recipe
       </button>
     </form>
   );

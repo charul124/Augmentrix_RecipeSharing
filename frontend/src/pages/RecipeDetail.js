@@ -7,6 +7,7 @@ const RecipeDetail = () => {
   const [recipe, setRecipe] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showSharePopup, setShowSharePopup] = useState(false); // State for share popup
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,7 +32,11 @@ const RecipeDetail = () => {
     if (window.confirm('Are you sure you want to delete this recipe? This action cannot be undone.')) {
       setLoading(true);
       try {
-        await axios.delete(`http://localhost:5000/api/recipes/${id}`);
+        const token = localStorage.getItem('token');
+        const headers = {
+          Authorization: `Bearer ${token}`,
+        };
+        await axios.delete(`http://localhost:5000/api/recipes/${id}`, { headers });
         alert('Recipe deleted successfully.');
         navigate('/');
       } catch (error) {
@@ -43,90 +48,165 @@ const RecipeDetail = () => {
     }
   };
 
+  const handleShare = () => {
+    setShowSharePopup(true); // Show the share popup
+  };
+
+  const closeSharePopup = () => {
+    setShowSharePopup(false); // Close the share popup
+  };
+
+  const shareOptions = [
+    {
+      name: 'Facebook',
+      url: `https://www.facebook.com/sharer/sharer.php?u=${window.location.href}`,
+      icon: 'fab fa-facebook-f'
+    },
+    {
+      name: 'Twitter',
+      url: `https://twitter.com/intent/tweet?url=${window.location.href}&text=Check out this recipe: ${recipe?.title}`,
+      icon: 'fab fa-twitter'
+    },
+    {
+      name: 'Pinterest',
+      url: `https://pinterest.com/pin/create/button/?url=${window.location.href}&media=${recipe?.image}&description=Check out this recipe: ${recipe?.title}`,
+      icon: 'fab fa-pinterest'
+    },
+    {
+      name: 'LinkedIn',
+      url: `https://www.linkedin.com/sharing/share?url=${window.location.href}`,
+      icon: 'fab fa-linkedin-in'
+    },
+    {
+      name: 'WhatsApp',
+      url: `https://wa.me/?text=Check out this recipe: ${recipe?.title} ${window.location.href}`,
+      icon: 'fab fa-whatsapp'
+    }
+  ];
+
   if (loading) {
-    return <div style={{ textAlign: 'center' }}>Loading...</div>;
+    return <div className="text-center py-20">Loading...</div>;
   }
 
   if (error) {
-    return <div style={{ color: 'red', textAlign: 'center' }}>Error: {error}</div>;
+    return <div className="text-red-500 text-center py-20">{error}</div>;
   }
 
   if (!recipe) {
-    return <div style={{ color: 'red', textAlign: 'center' }}>Recipe not found</div>;
+    return <div className="text-red-500 text-center py-20">Recipe not found</div>;
   }
 
   return (
-    <div style={{ maxWidth: '800px', margin: '40px auto', padding: '20px' }}>
-      <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '10px' }}>{recipe.title}</h1>
-      <img
-        src={recipe.image}
-        alt={recipe.title}
-        style={{ width: '100%', height: '200px', objectFit: 'cover', marginBottom: '10px' }}
-        loading="lazy"
-      />
-      <p style={{ fontSize: '18px', marginBottom: '20px' }}>{recipe.description}</p>
+    <div className="mx-32 my-10 p-5 bg-white shadow-lg rounded-lg">
+      <div className="flex gap-6 flex-col md:flex-row">
+        {/* Image Section */}
+        <div className="md:w-1/2 p-3">
+          <img
+            src={recipe.image}
+            alt={recipe.title}
+            className="w-full object-contain mb-7 rounded-lg shadow-md"
+            loading="lazy"
+          />
+          <p className='mb-2 font-semibold '>Know More about the recipe !</p>
+          <p className="text-gray-700 p-4 border mb-6">{recipe.description}</p>
+        </div>
 
-      {/* Displaying tags for cuisine, type, and meal type */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px' }}>
-        <span style={{ backgroundColor: '#f0ad4e', padding: '5px 10px', borderRadius: '5px' }}>{recipe.cuisine}</span>
-        <span style={{ backgroundColor: '#5bc0de', padding: '5px 10px', borderRadius: '5px' }}>{recipe.type}</span>
-        <span style={{ backgroundColor: '#d9534f', padding: '5px 10px', borderRadius: '5px' }}>{recipe.mealType}</span>
-      </div>
+        {/* Recipe Details */}
+        <div className="md:w-1/2 p-5 flex flex-col justify-between">
+          <div>
+            <h1 className="text-2xl font-bold mb-4">{recipe.title}</h1>
 
-      {/* Displaying categorized ingredients */}
-      {recipe.ingredients && recipe.ingredients.length > 0 && (
-        <div>
-          <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '10px' }}>Ingredients:</h2>
-          {recipe.ingredients.map((ingredient, index) => (
-            <div key={index} style={{ marginBottom: '15px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '5px' }}>{ingredient.heading}</h3>
-              <ul style={{ listStyleType: 'disc', paddingLeft: '20px' }}>
-                {ingredient.items.map((item, idx) => (
-                  <li key={idx} style={{ fontSize: '16px' }}>{item}</li>
-                ))}
-              </ul>
+            {/* Tags Section */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              <span className="bg-yellow-400 text-white px-3 py-1 rounded-full">{recipe.cuisine}</span>
+              <span className="bg-blue-400 text-white px-3 py-1 rounded-full">{recipe.type}</span>
+              <span className="bg-red-500 text-white px-3 py-1 rounded-full">{recipe.mealType}</span>
             </div>
-          ))}
-        </div>
-      )}
 
-      {/* Displaying steps */}
-      {recipe.steps && recipe.steps.length > 0 && (
-        <div style={{ marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '10px' }}>Start Cooking : </h2>
-          <ol>
-            {recipe.steps.map((step, index) => (
-              <li key={index} style={{ fontSize: '16px', marginBottom: '8px' }}>
-                <b>Step {index+1}</b> : {step}
-              </li>
-            ))}
-          </ol>
-        </div>
-      )}
+            {/* Ingredients Section */}
+            {recipe.ingredients && recipe.ingredients.length > 0 && (
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold mb-3">Ingredients:</h2>
+                {recipe.ingredients.map((ingredient, index) => (
+                  <div key={index} className="mb-3">
+                    <h3 className="text-lg font-semibold mb-1">{ingredient.heading}</h3>
+                    <ul className="list-disc list-inside">
+                      {ingredient.items.map((item, idx) => (
+                        <li key={idx} className="text-sm">{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <a
-          href={`mailto:?subject=Check out this recipe&body=Check out this recipe: ${window.location.href}`}
-          style={{ backgroundColor: '#007bff', color: '#fff', padding: '10px 20px', borderRadius: '5px', textDecoration: 'none' }}
-          aria-label="Share recipe"
-        >
-          Share
-        </a>
-        <a
-          href={`/edit/${recipe._id}`} 
-          style={{ backgroundColor: '#2ecc71', color: '#fff', padding: '10px 20px', borderRadius: '5px', textDecoration: 'none' }}
-          aria-label="Edit recipe"
-        >
-          Edit
-        </a>
-        <button
-          onClick={handleDelete}
-          style={{ backgroundColor: '#e74c3c', color: '#fff', padding: '10px 20px', borderRadius: '5px', cursor: 'pointer' }}
-          aria-label="Delete recipe"
-        >
-          Delete
-        </button>
+            {/* Steps Section */}
+            {recipe.steps && recipe.steps.length > 0 && (
+              <div>
+                <h2 className="text-xl font-semibold mb-3">Start Cooking:</h2>
+                <ol className="list-decimal list-inside space-y-2">
+                  {recipe.steps.map((step, index) => (
+                    <li key={index} className="text-sm">
+                      <b>Step {index + 1}</b>: {step}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex space-x-4 mt-6">
+            <button
+              onClick={handleShare}
+              className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 flex items-center"
+            >
+              <i className="fas fa-share-alt mr-2"></i> Share
+            </button>
+            <a
+              href={`/edit/${recipe._id}`}
+              className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 flex items-center"
+            >
+              <i className="fas fa-edit mr-2"></i> Edit
+            </a>
+            <button
+              onClick={handleDelete}
+              className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 flex items-center"
+            >
+              <i className="fas fa-trash-alt mr-2"></i> Delete
+            </button>
+          </div>
+        </div>
       </div>
+
+      {/* Share Popup */}
+      {showSharePopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full relative">
+            <button
+              className="absolute top-2 right-2 text-gray-700 hover:text-gray-900"
+              onClick={closeSharePopup}
+            >
+              &times;
+            </button>
+            <h2 className="text-lg font-bold mb-4 text-center">Share this recipe</h2>
+            <div className="flex justify-center space-x-4">
+              {shareOptions.map((option) => (
+                <a
+                  key={option.name}
+                  href={option.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-2xl text-gray-700 hover:text-gray-900"
+                  aria-label={`Share on ${option.name}`}
+                >
+                  <i className={option.icon}></i>
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
