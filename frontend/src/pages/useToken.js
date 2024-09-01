@@ -8,7 +8,7 @@ const useToken = () => {
   useEffect(() => {
     if (token) {
       console.log('Verifying token:', token);
-      axios.post('http://localhost:5000/api/verify-token', {}, {
+      axios.post('https://augmentrix-recipesharing.onrender.com/api/verify-token', {}, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

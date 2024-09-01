@@ -15,7 +15,7 @@ const RecipeDetail = () => {
       if (!id) return setError('No recipe ID provided');
 
       try {
-        const response = await axios.get(`http://localhost:5000/api/recipes/${id}`);
+        const response = await axios.get(`https://augmentrix-recipesharing.onrender.com/api/recipes/${id}`);
         setRecipe(response.data);
       } catch (error) {
         console.error('Error fetching recipe:', error);
@@ -38,7 +38,7 @@ const RecipeDetail = () => {
           Authorization: `Bearer ${token}`,
         };
         console.log('Headers:', headers);
-        const response = await axios.delete(`http://localhost:5000/api/recipes/${id}`, { headers });
+        const response = await axios.delete(`https://augmentrix-recipesharing.onrender.com/api/recipes/${id}`, { headers });
         console.log('Response:', response);
         alert('Recipe deleted successfully.');
         navigate('/');

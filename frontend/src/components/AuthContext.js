@@ -20,7 +20,7 @@ const AuthProvider = ({ children }) => {
     try {
         console.log('Toast notification triggered');
         toast.info('Logging out...');
-      await axios.post('http://localhost:5000/api/logout', null, {
+      await axios.post('https://augmentrix-recipesharing.onrender.com/api/logout', null, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

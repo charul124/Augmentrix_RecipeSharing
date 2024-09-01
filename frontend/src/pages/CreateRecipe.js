@@ -20,7 +20,7 @@ const CreateRecipe = () => {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       };
-      const response = await axios.post('http://localhost:5000/api/recipes/', recipe, { headers });
+      const response = await axios.post('https://augmentrix-recipesharing.onrender.com/api/recipes/', recipe, { headers });
       navigate(`/recipe/${response.data._id}`);
     } catch (error) {
       console.error('There was an error creating the recipe!', error);

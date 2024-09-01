@@ -19,7 +19,7 @@ const Home = () => {
   const fetchRecipes = async () => {
     console.log('Fetching recipes...');
     try {
-      const response = await axios.get('http://localhost:5000/api/recipes/get');
+      const response = await axios.get('https://augmentrix-recipesharing.onrender.com/api/recipes/get');
       console.log('Response:', response);
       setRecipes(response.data);
       setFilteredRecipes(response.data);

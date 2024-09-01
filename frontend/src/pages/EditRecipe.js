@@ -16,7 +16,7 @@ const EditRecipe = () => {
     const fetchRecipe = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`http://localhost:5000/api/recipes/${id}`);
+        const response = await axios.get(`https://augmentrix-recipesharing.onrender.com/recipes/${id}`);
         setRecipe(response.data);
       } catch (error) {
         setError('There was an error fetching the recipe.');
@@ -39,7 +39,7 @@ const EditRecipe = () => {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       };
-      const response = await axios.put(`http://localhost:5000/api/recipes/${id}`, updatedRecipe, { headers });
+      const response = await axios.put(`https://augmentrix-recipesharing.onrender.com/api/recipes/${id}`, updatedRecipe, { headers });
       navigate(`/recipe/${id}`);
     } catch (error) {
       if (error.response.status === 401) {

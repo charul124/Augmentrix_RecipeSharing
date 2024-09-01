@@ -24,7 +24,7 @@ const LoginPage = () => {
       }
 
       console.log('Sending request to server');
-      const response = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+      const response = await axios.post('https://augmentrix-recipesharing.onrender.com/api/auth/login', { email, password });
       console.log('Response received:', response.data);
 
       localStorage.setItem('token', response.data.token);
@@ -34,7 +34,7 @@ const LoginPage = () => {
 
       handleLoginContext(response.data.token);
 
-      axios.post('http://localhost:5000/api/verify-token', {}, {
+      axios.post('https://augmentrix-recipesharing.onrender.com/api/verify-token', {}, {
         headers: {
           Authorization: `Bearer ${response.data.token}`,
         },

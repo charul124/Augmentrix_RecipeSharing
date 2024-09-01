@@ -10,7 +10,7 @@ const MyRecipes = () => {
     const fetchRecipes = async () => {
       try {
         const token = localStorage.getItem('token'); // Replace with your token storage mechanism
-        const response = await axios.get('http://localhost:5000/api/my-recipes', {
+        const response = await axios.get('https://augmentrix-recipesharing.onrender.com/api/my-recipes', {
           headers: {
             Authorization: `Bearer ${token}`,
           },

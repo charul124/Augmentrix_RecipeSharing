@@ -22,7 +22,7 @@ const SignupPage = () => {
       }
 
       console.log('Sending request to server');
-      const response = await axios.post('http://localhost:5000/api/auth/signup', { name, email, password });
+      const response = await axios.post('https://augmentrix-recipesharing.onrender.com/api/auth/signup', { name, email, password });
       console.log('Response received:', response);
 
       if (response.status === 201) {
