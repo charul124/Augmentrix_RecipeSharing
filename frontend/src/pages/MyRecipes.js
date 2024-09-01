@@ -9,7 +9,12 @@ const MyRecipes = () => {
   useEffect(() => {
     const fetchRecipes = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/my-recipes');
+        const token = localStorage.getItem('token'); // Replace with your token storage mechanism
+        const response = await axios.get('http://localhost:5000/api/my-recipes', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         setRecipes(response.data);
       } catch (error) {
         console.error('Error fetching recipes:', error);
@@ -21,7 +26,7 @@ const MyRecipes = () => {
 
   return (
     <div>
-      <h1 h1 className="text-center text-3xl font-bold mt-8">My Recipes</h1>
+      <h1 className="text-center text-3xl font-bold my-8">My Recipes</h1>
       <RecipeGrid recipes={recipes} />
     </div>
   );

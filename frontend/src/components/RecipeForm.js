@@ -75,7 +75,7 @@ const RecipeForm = ({ onSubmit, recipe }) => {
       if (response.data.length > 0) {
         const fetchedRecipe = response.data[0];
         setTitle(fetchedRecipe.title);
-        setDescription(fetchedRecipe.instructions);
+        // setDescription(fetchedRecipe.instructions);
         setIngredients([{ heading: 'Main Ingredients', items: fetchedRecipe.ingredients.split('|') }]);
         setSteps(fetchedRecipe.instructions.split('. '));
       } else {

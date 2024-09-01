@@ -29,20 +29,18 @@ const EditRecipe = () => {
 
   const handleSubmit = async (updatedRecipe) => {
     if (!isValid) {
-      setError('Token is not valid');
+      setError('You must be logged in to edit a recipe.');
+      navigate('/login');
       return;
     }
-    console.log('handleSubmit called with updatedRecipe:', updatedRecipe);
+
     try {
       const headers = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       };
-      console.log('Sending PUT request with headers:', headers);
       const response = await axios.put(`http://localhost:5000/api/recipes/${id}`, updatedRecipe, { headers });
-      console.log('Response from server:', response);
       navigate(`/recipe/${id}`);
-
     } catch (error) {
       if (error.response.status === 401) {
         alert("Sorry, you cannot edit this recipe as you are not the author.");
@@ -59,6 +57,10 @@ const EditRecipe = () => {
 
   if (error) {
     return <div>Error: {error}</div>;
+  }
+
+  if (!isValid) {
+    return <div>You must be logged in to edit a recipe. <a href="/login">Login</a></div>;
   }
 
   return (

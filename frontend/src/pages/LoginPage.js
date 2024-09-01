@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { AuthContext } from '../components/AuthContext';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -10,6 +11,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const redirectTo = location.state?.redirectTo || '/';
+  const { handleLogin: handleLoginContext } = useContext(AuthContext);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -29,6 +31,8 @@ const LoginPage = () => {
       console.log('Token stored in local storage:', localStorage.getItem('token'));
       setToken(response.data.token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+
+      handleLoginContext(response.data.token);
 
       axios.post('http://localhost:5000/api/verify-token', {}, {
         headers: {
@@ -84,6 +88,7 @@ const LoginPage = () => {
               onChange={(e) => setEmail(e.target.value)}
               required
               className="w-full p-2 rounded border border-gray-300 text-sm"
+              autoComplete="username"
             />
           </div>
           <div className="mb-6">
@@ -94,6 +99,7 @@ const LoginPage = () => {
               onChange={(e) => setPassword(e.target.value)}
               required
               className="w-full p-2 rounded border border-gray-300 text-sm"
+              autoComplete="current-password"
             />
           </div>
           <button

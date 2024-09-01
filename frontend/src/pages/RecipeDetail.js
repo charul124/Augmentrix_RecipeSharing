@@ -33,15 +33,22 @@ const RecipeDetail = () => {
       setLoading(true);
       try {
         const token = localStorage.getItem('token');
+        console.log('Token:', token);
         const headers = {
           Authorization: `Bearer ${token}`,
         };
-        await axios.delete(`http://localhost:5000/api/recipes/${id}`, { headers });
+        console.log('Headers:', headers);
+        const response = await axios.delete(`http://localhost:5000/api/recipes/${id}`, { headers });
+        console.log('Response:', response);
         alert('Recipe deleted successfully.');
         navigate('/');
       } catch (error) {
-        console.error('Error deleting recipe:', error);
-        setError('There was an error deleting the recipe.');
+        if (error.response && error.response.status === 401) {
+          setError(error.response.data.message);
+        } else {
+          console.error('Error deleting recipe:', error);
+          setError('There was an error deleting the recipe.');
+        }
       } finally {
         setLoading(false);
       }
@@ -89,7 +96,19 @@ const RecipeDetail = () => {
   }
 
   if (error) {
-    return <div className="text-red-500 text-center py-20">{error}</div>;
+    return (
+      <div className="text-red-600 font-semibold text-xl text-center py-20">
+        {error}
+        <div className="flex justify-center mt-4">
+          <button
+            onClick={() => navigate('/')}
+            className="bg-rose-950 text-white py-2 px-4 rounded hover:bg-blue-600 flex items-center"
+          >
+            <i className="fas fa-home mr-2"></i> Move back to home page
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (!recipe) {
@@ -144,7 +163,7 @@ const RecipeDetail = () => {
             {recipe.steps && recipe.steps.length > 0 && (
               <div>
                 <h2 className="text-xl font-semibold mb-3">Start Cooking:</h2>
-                <ol className="list-decimal list-inside space-y-2">
+                <ol className="space-y-2">
                   {recipe.steps.map((step, index) => (
                     <li key={index} className="text-sm">
                       <b>Step {index + 1}</b>: {step}

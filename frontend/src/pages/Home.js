@@ -81,7 +81,7 @@ const Home = () => {
   return (
     <div className="p-0">
       <div className='static'>
-        <img className='' src="images/homebg.jpg" alt="" srcset="" />
+        <img className='' src="images/homebg.jpg" alt="HomeBG" />
         <div className='absolute drop-shadow-2xl top-32 w-96 font-semibold text-white left-44'>
           <p className='text-3xl font-extrabold mb-4'>Eat's&Share's: Where Your Cravings Meet Creativity!</p>
           <p className='text-md mb-4 text-black'>Dive into a world of mouth-watering recipes, whip up your favorites, and share the love (and flavors) with fellow foodies!</p>
@@ -105,6 +105,7 @@ const Home = () => {
           onChange={handleSearch}
           placeholder="Search recipes..."
           className="p-2 w-1/2 rounded-md border border-gray-300 text-lg"
+          autoComplete='search'
         />
         <select
           value={cuisineFilter}

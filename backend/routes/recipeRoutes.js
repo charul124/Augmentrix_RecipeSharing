@@ -141,6 +141,8 @@ router.put('/:id', authMiddleware, async (req, res) => {
   }
 });
 
+
+// Delete a recipe by ID
 // Delete a recipe by ID
 router.delete('/:id', authMiddleware, async (req, res) => {
   const recipeId = req.params.id;
@@ -154,6 +156,13 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     if (!recipe) {
       return res.status(404).json({ message: 'Recipe not found' });
     }
+
+    // Check if the user attempting to delete the recipe is the same user who created it
+    if (recipe.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(401).json({ message: 'You are not authorized to delete this recipe' });
+    }
+
+    await Recipe.deleteOne({ _id: recipeId });
     res.status(200).json({ message: 'Recipe deleted successfully' });
   } catch (error) {
     console.error('Error deleting recipe:', error);

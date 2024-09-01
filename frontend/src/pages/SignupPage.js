@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../components/AuthContext';
 
 const SignupPage = () => {
   const [name, setName] = useState('');
@@ -8,6 +9,7 @@ const SignupPage = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const { handleLogin: handleLoginContext } = useContext(AuthContext);
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -25,6 +27,7 @@ const SignupPage = () => {
 
       if (response.status === 201) {
         console.log('Signup successful');
+        handleLoginContext(response.data.token);
         navigate('/login');
       } else {
         console.log('Error signing up:', response.data.message);
